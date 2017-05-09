@@ -58,7 +58,7 @@ public class LuceneTester
         reindex.set(true);
         reindex();
         
-        TimerTask task = new DirWatcher(Settings.FILES_TO_INDEX_DIRECTORY, "txt" ) {
+        TimerTask task = new DirWatcher(Settings.FILES_TO_INDEX_DIRECTORY) {
             @Override
             protected void onChange( File file, String action ) {
                 reindex();
@@ -94,6 +94,7 @@ public class LuceneTester
                     case "Root":
                         System.out.println("ffile - From file");
                         System.out.println("key - From keyboard");
+                        System.out.println("re - Reindex");
                         break;
                     case "Root > ffile":
                         System.out.println("load - Load questions from file");
@@ -119,6 +120,10 @@ public class LuceneTester
             else if (cursor.equals("Root > key") && !input.equals("quit")) {
                 searcher.search(input);
             }
+            else if (cursor.equals("Root") && input.equals("re")) {
+                reindex();
+            }
+            
         }
 
         //System.out.println("============================================");
