@@ -22,6 +22,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.tika.exception.TikaException;
@@ -43,7 +44,11 @@ public class Indexer
         Analyzer analyzer = new RomanianASCIIAnalyzer();
 
         IndexWriterConfig indexConfig = new IndexWriterConfig(analyzer);
-        IndexWriter indexWriter = new IndexWriter(indexDir, indexConfig);
+        indexConfig.setOpenMode(OpenMode.CREATE);
+        
+        IndexWriter indexWriter = null;
+        indexWriter = new IndexWriter(indexDir, indexConfig);
+        
         File dir = new File(Settings.FILES_TO_INDEX_DIRECTORY);
         File[] files = dir.listFiles();
         for (File file : files)
@@ -82,6 +87,7 @@ public class Indexer
                         System.out.println("> Index file "+spath);
                     } catch (SAXException | TikaException ex) {
                         System.out.println("> CAN'T index file "+spath);
+                        System.err.println(ex.getMessage());
                     }
                     break;
                 }

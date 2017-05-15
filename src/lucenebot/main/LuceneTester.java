@@ -3,6 +3,7 @@ package lucenebot.main;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -22,7 +23,6 @@ import lucenebot.system.Indexer;
 import lucenebot.system.Searcher;
 import lucenebot.system.Settings;
 import lucenebot.system.VA_DEBUG;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 
@@ -50,15 +50,15 @@ public class LuceneTester
         lockIndex();
         try {
             indexer.createIndex();
-        } catch (Exception ex) {}
+        } catch (IOException ex) {}
 
         unlockIndex();
     }
     
     public static void main(String[] args) throws Exception
     {
-        indexDir = new RAMDirectory();
-        //indexDir = FSDirectory.open(Paths.get(Settings.INDEX_DIRECTORY));
+        //indexDir = new RAMDirectory();
+        indexDir = FSDirectory.open(Paths.get(Settings.INDEX_DIRECTORY));
         
         indexer  = new Indexer(indexDir);
         searcher = new Searcher(indexDir);
