@@ -23,7 +23,7 @@ public class Searcher
 
     public void search(String searchString) throws IOException, ParseException
     {
-        System.out.println("SEARCH FOR '" + searchString + "'");
+        VA_DEBUG.INFO("SEARCH FOR '" + searchString + "'", true);
 
         DirectoryReader indexReader = DirectoryReader.open(indexDir);
         IndexSearcher indexSearcher = new IndexSearcher(indexReader);
@@ -32,13 +32,20 @@ public class Searcher
         QueryParser queryParser = new QueryParser(Settings.FIELD_CONTENTS, analyzer);
         Query query = queryParser.parse(searchString);
         ScoreDoc[] hits = indexSearcher.search(query, 100).scoreDocs;
-        System.out.println("> Number of hits: " + hits.length);
-
+        if (hits.length > 0) {
+            VA_DEBUG.SUCCESS("> Number of hits: " + hits.length, true);
+        }
+        else {
+            VA_DEBUG.ERROR("> Number of hits: " + hits.length, true);
+        }
+        
         //Iterator<Hit> it = hits.iterator();
         for (int i = 0; i < hits.length; i++) {
             Document document = indexSearcher.doc(hits[i].doc);
             String path = document.get(Settings.FIELD_PATH);
-            System.out.println("> Hit: " + path);
+            VA_DEBUG.INFO("> Hit: " + path, true);
         }
+        
+        System.out.println();
     }
 }

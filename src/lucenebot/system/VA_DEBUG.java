@@ -61,8 +61,15 @@ public class VA_DEBUG
             case 1:
                 _consoleInfo(process, msg, newline);
                 break;
-            case 2:
-                _fileInfo(process, msg, newline);
+        }
+    }
+    
+    public static void INFO(String msg, boolean newline)
+    {
+        switch(SOURCE)
+        {
+            case 1:
+                _consoleInfo(msg, newline);
                 break;
         }
     }
@@ -79,8 +86,20 @@ public class VA_DEBUG
             case 1:
                 _consoleError(process,msg);
                 break;
-            case 2:
-                _fileError(process,msg);
+        }
+    }
+    
+    /**
+     *
+     * @param process
+     * @param msg
+     */
+    public static void ERROR(String msg, boolean newline)
+    {
+        switch(SOURCE)
+        {
+            case 1:
+                _consoleError(msg, newline);
                 break;
         }
     }
@@ -97,8 +116,20 @@ public class VA_DEBUG
             case 1:
                 _consoleSuccess(process,msg);
                 break;
-            case 2:
-                _fileSuccess(process,msg);
+        }
+    }
+    
+    /**
+     *
+     * @param process
+     * @param msg
+     */
+    public static void SUCCESS(String msg, boolean newline)
+    {
+        switch(SOURCE)
+        {
+            case 1:
+                _consoleSuccess(msg, newline);
                 break;
         }
     }
@@ -114,9 +145,6 @@ public class VA_DEBUG
         {
             case 1:
                 _consoleWarning(process,msg);
-                break;
-            case 2:
-                _fileWarning(process,msg);
                 break;
         }
     }
@@ -138,6 +166,19 @@ public class VA_DEBUG
                 (char)27+"[36m["+dateFormat.format(date)+"] "+
                 (char)27+"[0m"+process+" "+(char)27+"[0m");
 
+        int i=0;
+        int count = msg.split("\n").length;
+        for(String line : msg.split("\n")) {
+            System.out.print((char)27+"[1m"+line+(char)27+"[0m");
+            boolean last = (i++ == count-1); 
+            if (!last || newline) {
+                System.out.print("\n");
+            }
+        }
+    }
+    
+    private static void _consoleInfo(String msg, boolean newline)
+    {
         int i=0;
         int count = msg.split("\n").length;
         for(String line : msg.split("\n")) {
@@ -173,6 +214,19 @@ public class VA_DEBUG
         }
     }
     
+    private static void _consoleError(String msg, boolean newline)
+    {
+        int i=0;
+        int count = msg.split("\n").length;
+        for(String line : msg.split("\n")) {
+            System.out.print((char)27+"[31m"+line+(char)27+"[0m");
+            boolean last = (i++ == count-1); 
+            if (!last || newline) {
+                System.out.print("\n");
+            }
+        }
+    }
+    
     private static void _consoleSuccess(String process, String msg)
     {
         Date date = new Date();
@@ -185,23 +239,17 @@ public class VA_DEBUG
         }
     }
     
-    private static void _fileInfo(String process, String msg, boolean newline)
+    private static void _consoleSuccess(String msg, boolean newline)
     {
-        
+        int i=0;
+        int count = msg.split("\n").length;
+        for(String line : msg.split("\n")) {
+            System.out.print((char)27+"[32m"+line+(char)27+"[0m");
+            boolean last = (i++ == count-1); 
+            if (!last || newline) {
+                System.out.print("\n");
+            }
+        }
     }
     
-    private static void _fileWarning(String process, String msg)
-    {
-        
-    }
-    
-    private static void _fileError(String process, String msg)
-    {
-        
-    }
-    
-    private static void _fileSuccess(String process, String msg)
-    {
-        
-    }
 }
