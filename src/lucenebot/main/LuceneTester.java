@@ -1,6 +1,9 @@
 package lucenebot.main;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Scanner;
@@ -17,7 +20,9 @@ import lucenebot.system.Indexer;
 import lucenebot.system.Searcher;
 import lucenebot.system.Settings;
 import lucenebot.system.VA_DEBUG;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 
 public class LuceneTester
 {
@@ -25,7 +30,6 @@ public class LuceneTester
     private static final Lock processLock = new ReentrantLock();
     private static final Condition condVar = processLock.newCondition();
     
-    //private static Directory indexDir = new RAMDirectory();
     private static Directory indexDir;
 
     private static Indexer  indexer;
@@ -48,7 +52,8 @@ public class LuceneTester
     
     public static void main(String[] args) throws Exception
     {
-        indexDir = FSDirectory.open(Paths.get(Settings.INDEX_DIRECTORY));
+        indexDir = new RAMDirectory();
+        //indexDir = FSDirectory.open(Paths.get(Settings.INDEX_DIRECTORY));
         
         indexer  = new Indexer(indexDir);
         searcher = new Searcher(indexDir);
@@ -115,17 +120,35 @@ public class LuceneTester
                 cursor = "Root";
             }
             else if (cursor.equals("Root > ffile") && input.equals("load")) {
-                //
+                
+            
+                if (!Files.isReadable(Paths.get("C:\\Users\\Adrian Simionescu\\Desktop\\i am vadry\\vadry\\LuceneRomanianBot\\questions.txt"))) {
+                    System.exit(1);
+                }
+
+                try(BufferedReader fileReader = new BufferedReader(new FileReader("C:\\Users\\Adrian Simionescu\\Desktop\\i am vadry\\vadry\\LuceneRomanianBot\\questions.txt"))) {
+                    StringBuilder sb = new StringBuilder();
+                    String line = fileReader.readLine();
+
+                    while (line != null) {
+                        searcher.search(line);
+
+                        //Citim urmatoarea linie
+                        line = fileReader.readLine();
+                    }
+
+                }
             }
-            else if (cursor.equals("Root > key") && !input.equals("quit")) {
+            else if (cursor.equals("Root > key") && !input.equals("quit") && !input.isEmpty()) {
                 searcher.search(input);
             }
             else if (cursor.equals("Root") && input.equals("re")) {
                 reindex();
             }
+            else if (input.equals("exit")) {
+                System.exit(0);
+            }
             
         }
-
-        //System.out.println("============================================");
     }
 }

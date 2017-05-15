@@ -11,7 +11,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jdk.internal.org.xml.sax.SAXException;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -106,7 +108,8 @@ public class Indexer
         {
             parser.parse(stream, handler, metadata);
             return handler.toString();
-        } catch (org.xml.sax.SAXException ex)
+        }
+        catch (org.xml.sax.SAXException ex)
         {
             Logger.getLogger(Indexer.class.getName()).log(Level.SEVERE, null, ex);
         }
