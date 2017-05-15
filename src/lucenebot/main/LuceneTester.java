@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lucenebot.system.DirWatcher;
 import org.apache.lucene.store.Directory;
 
@@ -26,9 +28,13 @@ import org.apache.lucene.store.RAMDirectory;
 
 public class LuceneTester
 {
-    private static final AtomicBoolean reindex = new AtomicBoolean(false);
-    private static final Lock processLock = new ReentrantLock();
-    private static final Condition condVar = processLock.newCondition();
+    private static final AtomicBoolean indexInProgress = new AtomicBoolean(false);
+    private static final AtomicBoolean searchInProgress = new AtomicBoolean(false);
+    private static final Lock indexLock = new ReentrantLock();
+    private static final Condition condIndex = indexLock.newCondition();
+    private static final Lock searchLock = new ReentrantLock();
+    private static final Condition condSearch = searchLock.newCondition();
+    
     
     private static Directory indexDir;
 
@@ -37,17 +43,16 @@ public class LuceneTester
     
     private static void reindex()
     {
+        checkSearch();
+        
         VA_DEBUG.INFO("Indexer", "Reindex...");
+        
+        lockIndex();
         try {
             indexer.createIndex();
         } catch (Exception ex) {}
 
-        reindex.set(false);
-        processLock.lock();
-        try {
-            condVar.signal();
-        }
-        finally { processLock.unlock(); }
+        unlockIndex();
     }
     
     public static void main(String[] args) throws Exception
@@ -60,7 +65,7 @@ public class LuceneTester
     
 
         // First time
-        reindex.set(true);
+        lockIndex();
         reindex();
         
         TimerTask task = new DirWatcher(Settings.FILES_TO_INDEX_DIRECTORY) {
@@ -77,21 +82,14 @@ public class LuceneTester
         String cursor = "Root";
         while(true)
         {
-            if (reindex.get() == true)
-            {
-                processLock.lock();
-                try {
-                    VA_DEBUG.INFO("Sercher", "Wait reindex...");
-                    condVar.await();
-                }
-                finally { processLock.unlock(); }
-            }
+            checkIndex();
             
             VA_DEBUG.INFO("Sercher: "+cursor, "> ", false);
             
             Scanner scanner = new Scanner(System. in);
             String input = scanner.nextLine();
             
+            lockSearch();
             if (input.equals("ls"))
             {
                 switch(cursor)
@@ -100,6 +98,7 @@ public class LuceneTester
                         System.out.println("ffile - From file");
                         System.out.println("key - From keyboard");
                         System.out.println("re - Reindex");
+                        System.out.println("exit - Exit program");
                         break;
                     case "Root > ffile":
                         System.out.println("load - Load questions from file");
@@ -122,11 +121,11 @@ public class LuceneTester
             else if (cursor.equals("Root > ffile") && input.equals("load")) {
                 
             
-                if (!Files.isReadable(Paths.get("C:\\Users\\Adrian Simionescu\\Desktop\\i am vadry\\vadry\\LuceneRomanianBot\\questions.txt"))) {
+                if (!Files.isReadable(Paths.get(Settings.ROOT+"questions.txt"))) {
                     System.exit(1);
                 }
 
-                try(BufferedReader fileReader = new BufferedReader(new FileReader("C:\\Users\\Adrian Simionescu\\Desktop\\i am vadry\\vadry\\LuceneRomanianBot\\questions.txt"))) {
+                try(BufferedReader fileReader = new BufferedReader(new FileReader(Settings.ROOT+"questions.txt"))) {
                     StringBuilder sb = new StringBuilder();
                     String line = fileReader.readLine();
 
@@ -143,12 +142,76 @@ public class LuceneTester
                 searcher.search(input);
             }
             else if (cursor.equals("Root") && input.equals("re")) {
+                unlockSearch();
                 reindex();
             }
             else if (input.equals("exit")) {
                 System.exit(0);
             }
+            unlockSearch();
             
         }
+    }
+    
+    private static void checkIndex()
+    {
+        if (indexInProgress.get() == true)
+        {
+            indexLock.lock();
+            try {
+                VA_DEBUG.INFO("Sercher", "Wait reindex...");
+                condIndex.await();
+            }
+            catch (InterruptedException ex) {
+                Logger.getLogger(LuceneTester.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            finally { indexLock.unlock(); }
+        }
+    }
+    
+    private static void checkSearch()
+    {
+        if (searchInProgress.get() == true)
+        {
+            searchLock.lock();
+            try {
+                VA_DEBUG.INFO("Indexer", "Wait searching...");
+                condSearch.await();
+            }
+            catch (InterruptedException ex) {
+                Logger.getLogger(LuceneTester.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            finally { searchLock.unlock(); }
+        }
+    }
+    
+    private static void lockIndex()
+    {
+        indexInProgress.set(true);
+    }
+    
+    private static void lockSearch()
+    {
+        searchInProgress.set(true);
+    }
+    
+    private static void unlockIndex()
+    {
+        indexInProgress.set(false);
+        indexLock.lock();
+        try {
+            condIndex.signal();
+        }
+        finally { indexLock.unlock(); }
+    }
+    
+    private static void unlockSearch()
+    {
+        searchInProgress.set(false);
+        searchLock.lock();
+        try {
+            condSearch.signal();
+        }
+        finally { searchLock.unlock(); }
     }
 }
