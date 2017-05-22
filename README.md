@@ -6,3 +6,5 @@ Requirements:
 - tika-app-1.14
 
 Run LuceneTester.java
+
+Test
